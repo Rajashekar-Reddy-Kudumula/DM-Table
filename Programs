@@ -37,9 +37,10 @@ View(surv_object)
 km_fit <- survfit(surv_object ~ Cell, data = data)
 ggsurvplot(km_fit, data = data, xlab = "Time", ylab = "Survival Probability")
 
-# Cumulative Incidence Function
+# Cumulative Incidence Function 
 cuminc_fit <- cuminc(ftime = data$SurvTime, fstatus = data$Cell)
 
+# plot
 plot(cuminc_fit, xlab = "Time", ylab = "Cumulative Incidence")
 
 # Cox Proportional Hazards Model
