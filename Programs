@@ -1,0 +1,105 @@
+packages <- c("admiral", "dplyr", "ggplot2", "tidyverse","haven", "readxl", "survminer", "survival")  
+
+for (pkg in packages) {
+  if (!require(pkg, character.only = TRUE)) {
+    install.packages(pkg, dependencies = TRUE)
+    library(pkg, character.only = TRUE)
+  }
+}
+
+
+
+
+###############################################################################
+# 5. Perform a survival analysis to assess the survival time (variable SurvTime)? based on the cancerous cells (var Cell)?
+#     Consider applying survival functions/kaplan meier quartiles/cumulative incidence function/cox regression etc.
+###############################################################################
+
+# Read the dataset
+data <- read_excel("Oncology_dataset_for_R.xlsx")
+
+
+
+# Kaplan-Meier Estimator: To estimate the survival function.
+# Cumulative Incidence Function: To estimate the probability of the event occurring by a certain time.
+# Cox Proportional Hazards Model: To assess the effect of cancerous cells on survival time.
+
+
+# Ensure 'Cell' is a factor
+data$Cell <- as.factor(data$Cell)
+
+# Create a survival object
+surv_object <- Surv(time = data$SurvTime, event = data$Event)
+
+View(surv_object)
+
+# Kaplan-Meier Estimator
+km_fit <- survfit(surv_object ~ Cell, data = data)
+ggsurvplot(km_fit, data = data, xlab = "Time", ylab = "Survival Probability")
+
+# Cumulative Incidence Function
+cuminc_fit <- cuminc(ftime = data$SurvTime, fstatus = data$Cell)
+
+plot(cuminc_fit, xlab = "Time", ylab = "Cumulative Incidence")
+
+# Cox Proportional Hazards Model
+cox_fit <- coxph(surv_object ~ Cell, data = data)
+summary(cox_fit)
+ggforest(cox_fit, data = data)
+
+
+
+
+###############################################################################
+# 6. Perform an appropriate multivariable analysis to analyze the effect of independen 
+#    variables age on the hazard ratio between the different cancerous cells (var Cell)? 
+###############################################################################
+
+# Load the dataset
+data <- read_excel("Oncology_dataset_for_R.xlsx")
+
+
+# Convert necessary columns to appropriate data types
+data <- data %>%
+  mutate(
+    Cell = as.factor(Cell),
+    Event = as.numeric(Event),
+    SurvTime = as.numeric(SurvTime),
+    Age = as.numeric(Age)
+  )
+#Fit the Cox proportional hazards model:
+
+
+unique(data$Cell)
+
+
+# Fit the Cox proportional hazards model
+cox_model <- coxph(Surv(SurvTime, Event) ~ Age + Cell, data = data)
+
+# Display the summary of the model
+summary(cox_model)
+
+
+# Calculating Hazard Ratios and Confidence Intervals:
+hr <- exp(coef(cox_model))
+ci <- exp(confint(cox_model))
+
+# Create a data frame for better visualization
+results <- data.frame(
+  Variable = names(hr),
+  Hazard_Ratio = hr,
+  CI_Lower = ci[, 1],
+  CI_Upper = ci[, 2]
+)
+
+# Print the results
+print(results)
+
+# Plot the survival curves for different cancerous cells
+surv_fit <- survfit(cox_model, newdata = data)
+plot(surv_fit, col = 1:length(levels(data$Cell)), lty = 1, xlab = "Time", ylab = "Survival Probability")
+legend("topright", legend = levels(data$Cell), col = 1:length(levels(data$Cell)), lty = 1)
+
+
+
+
