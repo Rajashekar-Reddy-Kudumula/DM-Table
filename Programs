@@ -15,7 +15,7 @@ for (pkg in packages) {
 #     Consider applying survival functions/kaplan meier quartiles/cumulative incidence function/cox regression etc.
 ###############################################################################
 
-# Read the dataset
+# Read the input dataset
 data <- read_excel("Oncology_dataset_for_R.xlsx")
 
 
